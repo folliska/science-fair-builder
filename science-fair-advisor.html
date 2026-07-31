@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Science Fair Project Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #F0ECDF;
+    --paper-line: #d9d2bd;
+    --ink: #1F2E2B;
+    --moss: #3F6C51;
+    --moss-light: #e7efe8;
+    --ember: #C1622D;
+    --ember-light: #f7e8dd;
+    --sky: #35708F;
+    --sky-light: #e4eef2;
+    --flag: #B23A3A;
+    --flag-light: #f6e1df;
+    --card: #FBFAF4;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    background-image:
+      linear-gradient(var(--paper-line) 1px, transparent 1px);
+    background-size: 100% 2.1rem;
+    color:var(--ink);
+    font-family:'Atkinson Hyperlegible', sans-serif;
+    min-height:100vh;
+  }
+  .stamp-font{ font-family:'Space Mono', monospace; letter-spacing:0.03em; }
+
+  .layout{
+    display:flex;
+    min-height:100vh;
+    max-width:1100px;
+    margin:0 auto;
+  }
+
+  /* NOTEBOOK SPINE */
+  .spine{
+    width:64px;
+    flex-shrink:0;
+    padding-top:32px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+  .tab{
+    width:44px;
+    height:56px;
+    border-radius:6px 0 0 6px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Space Mono', monospace;
+    font-size:0.68rem;
+    font-weight:700;
+    text-align:center;
+    line-height:1.15;
+    color:#8a8470;
+    background:#e2ddca;
+    border:1px solid var(--paper-line);
+    border-right:none;
+    transition:all .25s ease;
+    cursor:default;
+    padding:2px;
+  }
+  .tab.active{
+    background:var(--card);
+    color:var(--ink);
+    width:52px;
+    box-shadow:-2px 2px 6px rgba(0,0,0,0.08);
+  }
+  .tab.done{
+    background:var(--moss);
+    color:#fff;
+  }
+
+  /* MAIN PAGE */
+  .page{
+    flex:1;
+    padding:28px 40px 120px 32px;
+  }
+  header.top{
+    margin-bottom:22px;
+  }
+  header.top h1{
+    font-family:'Space Mono', monospace;
+    font-size:1.5rem;
+    margin:0 0 4px 0;
+  }
+  header.top p{
+    margin:0;
+    color:#5b5747;
+    font-size:0.95rem;
+  }
+
+  .transcript{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    margin-bottom:24px;
+  }
+
+  .entry{
+    display:flex;
+    gap:12px;
+    max-width:100%;
+    animation: fadeIn .35s ease;
+  }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  .entry .avatar{
+    width:34px; height:34px; flex-shrink:0;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.1rem;
+    margin-top:2px;
+  }
+  .entry.bot .avatar{ background:var(--moss); color:#fff; }
+  .entry.student{ flex-direction:row-reverse; margin-left:auto; }
+  .entry.student .avatar{ background:var(--ember); color:#fff; }
+
+  .bubble{
+    background:var(--card);
+    border:1px solid var(--paper-line);
+    border-radius:10px;
+    padding:12px 16px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.05);
+    line-height:1.5;
+    max-width:640px;
+  }
+  .entry.student .bubble{
+    background:var(--ember-light);
+    border-color:#e6c4a8;
+  }
+  .bubble p{ margin:0 0 8px 0; }
+  .bubble p:last-child{ margin-bottom:0; }
+  .bubble .field-name{
+    font-family:'Space Mono', monospace;
+    font-size:0.72rem;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:#7a7565;
+    display:block;
+    margin-bottom:2px;
+  }
+
+  /* STAMP */
+  .stamp{
+    display:inline-block;
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    font-size:0.72rem;
+    letter-spacing:0.08em;
+    color:var(--flag);
+    border:2px solid var(--flag);
+    border-radius:4px;
+    padding:3px 9px;
+    transform: rotate(-4deg);
+    margin:6px 0 2px 0;
+    animation: stampDown .28s cubic-bezier(.2,1.4,.6,1);
+  }
+  .stamp.moss{ color:var(--moss); border-color:var(--moss); }
+  @keyframes stampDown{
+    0%{ transform: rotate(-4deg) scale(2.2); opacity:0; }
+    60%{ opacity:1; }
+    100%{ transform: rotate(-4deg) scale(1); opacity:1; }
+  }
+
+  /* CHOICE BUTTONS */
+  .choices{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:6px;
+  }
+  .choice-btn{
+    font-family:'Atkinson Hyperlegible', sans-serif;
+    font-size:0.92rem;
+    background:#fff;
+    border:1.5px solid var(--ink);
+    color:var(--ink);
+    border-radius:20px;
+    padding:9px 16px;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .choice-btn:hover{ background:var(--ink); color:#fff; }
+  .choice-btn:focus-visible{ outline:3px solid var(--sky); outline-offset:2px; }
+  .choice-btn.wide{ border-radius:8px; text-align:left; }
+
+  .idea-card{
+    background:#fff;
+    border:1.5px solid var(--ink);
+    border-radius:8px;
+    padding:12px 14px;
+    margin-top:6px;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .idea-card:hover{ background:var(--sky-light); }
+  .idea-card:focus-visible{ outline:3px solid var(--sky); outline-offset:2px; }
+  .idea-card b{ display:block; margin-bottom:3px; }
+  .idea-card span{ font-size:0.85rem; color:#5b5747; }
+
+  /* INPUT ROW */
+  .input-row{
+    display:flex;
+    gap:8px;
+    margin-top:6px;
+  }
+  .input-row input, .input-row textarea{
+    flex:1;
+    font-family:'Atkinson Hyperlegible', sans-serif;
+    font-size:0.95rem;
+    padding:10px 12px;
+    border:1.5px solid var(--ink);
+    border-radius:8px;
+    background:#fff;
+  }
+  .input-row button{
+    font-family:'Space Mono', monospace;
+    font-size:0.85rem;
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:0 18px;
+    cursor:pointer;
+  }
+  .input-row button:hover{ background:#000; }
+  .input-row button:disabled{ background:#aaa; cursor:not-allowed; }
+
+  .helper-note{
+    font-size:0.82rem;
+    color:#7a7565;
+    margin-top:4px;
+  }
+
+  /* CHECKLIST */
+  .checklist{ display:flex; flex-direction:column; gap:10px; margin-top:8px; }
+  .check-item{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    background:#fff;
+    border:1.5px solid #d8d2bd;
+    border-radius:8px;
+    padding:10px 12px;
+  }
+  .check-item.flagged{ border-color:var(--flag); background:var(--flag-light); }
+  .check-item input[type=checkbox]{ width:19px; height:19px; margin-top:2px; flex-shrink:0; }
+  .check-item label{ font-size:0.92rem; line-height:1.4; }
+  .check-item .flag-note{ display:block; color:var(--flag); font-size:0.82rem; margin-top:3px; font-weight:700; }
+
+  /* SUMMARY CARD */
+  .summary-card{
+    background:var(--card);
+    border:2px solid var(--ink);
+    border-radius:12px;
+    padding:22px 26px;
+    margin-top:10px;
+  }
+  .summary-card h2{
+    font-family:'Space Mono', monospace;
+    font-size:1.1rem;
+    margin:0 0 14px 0;
+    border-bottom:2px dashed var(--paper-line);
+    padding-bottom:10px;
+  }
+  .summary-row{ margin-bottom:12px; }
+  .summary-row .label{
+    font-family:'Space Mono', monospace;
+    font-size:0.7rem;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--moss);
+    display:block;
+    margin-bottom:2px;
+  }
+  .summary-row .value{ font-size:1rem; }
+  .group-pill{
+    display:inline-block;
+    background:var(--sky-light);
+    border:1px solid var(--sky);
+    border-radius:14px;
+    padding:3px 10px;
+    font-size:0.85rem;
+    margin:2px 4px 2px 0;
+  }
+  .actions{ display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+  .actions button{
+    font-family:'Space Mono', monospace;
+    font-size:0.85rem;
+    padding:10px 16px;
+    border-radius:8px;
+    cursor:pointer;
+    border:1.5px solid var(--ink);
+    background:#fff;
+  }
+  .actions button.primary{ background:var(--ink); color:#fff; }
+  .actions button:hover{ opacity:0.85; }
+
+  @media print{
+    .spine, header.top, .transcript{ display:none !important; }
+    body{ background:#fff; }
+    .page{ padding:0; }
+  }
+
+  @media (max-width: 700px){
+    .spine{ display:none; }
+    .page{ padding:20px 16px 100px 16px; }
+    .bubble{ max-width:90%; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .entry, .stamp{ animation:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <nav class="spine" id="spine" aria-label="Progress"></nav>
+  <main class="page">
+    <header class="top">
+      <h1>🔬 Science Fair Project Builder</h1>
+      <p>Let's design a project step by step — topic, question, variables, groups, and a safety check.</p>
+    </header>
+    <div class="transcript" id="transcript"></div>
+    <div id="controls"></div>
+  </main>
+</div>
+
+<script>
+/* ============================= DATA ============================= */
+
+const STAGES = ["Strand","Topic","Idea","Question","Variables","Groups","Safety","Summary"];
+
+// Topics below are screened against Collier Regional / SSEF of Florida / ISEF Junior Division rules
+// (SY26-27). Junior human-participant, vertebrate-animal, and PHBA/tissue projects CANNOT compete
+// at CRSEF, so those topic types are intentionally left out of the starter bank. See goToSafety()
+// for the gating questions that catch these if a student builds a custom idea instead.
+const STRANDS = {
+  earth: {
+    label: "Earth & Space",
+    emoji: "🌎",
+    topics: [
+      {
+        name: "Weather & Water",
+        ideas: [
+          { q: "Does the type of surface (grass, pavement, sand) affect how much water runs off versus soaks in?", iv: "type of surface", ivUnit:"surface type", dv: "amount of water that runs off", dvUnit:"mL collected", groups: ["Grass","Pavement","Sand","Soil"], category:"EAEV: Earth & Environmental Sciences" },
+          { q: "Does water temperature affect how fast it evaporates?", iv: "starting water temperature", ivUnit:"°F", dv: "amount of water left after 24 hours", dvUnit:"mL", groups: ["Cold","Room temp","Warm"], category:"EAEV: Earth & Environmental Sciences" },
+          { q: "Does the color of a container affect how fast the water inside heats up in sunlight?", iv: "container color", ivUnit:"color", dv: "water temperature", dvUnit:"°F", groups: ["Black","White","Clear","Silver"], category:"EAEV: Earth & Environmental Sciences" }
+        ]
+      },
+      {
+        name: "Rocks, Soil & Erosion",
+        ideas: [
+          { q: "Does the angle of a slope affect how much soil erodes when water flows over it?", iv: "slope angle", ivUnit:"degrees", dv: "amount of soil washed away", dvUnit:"grams", groups: ["Flat","Gentle slope","Steep slope"], category:"EAEV: Earth & Environmental Sciences", note:"If you'd collect soil/water on school grounds outside normal classroom use (a pond, lake, or wooded area on campus), that needs prior principal + SRC approval — do this at home or in a classroom setting instead if possible." },
+          { q: "Does the amount of plant roots in soil affect how much it erodes?", iv: "amount of root cover", ivUnit:"none/some/full", dv: "amount of soil washed away", dvUnit:"grams", groups: ["Bare soil","Some grass","Full grass cover"], category:"EAEV: Earth & Environmental Sciences" }
+        ]
+      },
+      {
+        name: "Space & Astronomy",
+        ideas: [
+          { q: "Does the distance from a light source affect how much light a model 'planet' receives?", iv: "distance from light source", ivUnit:"cm", dv: "light intensity measured", dvUnit:"lux (light meter/app)", groups: ["Near","Medium","Far"], category:"PHYS: Physics & Astronomy" },
+          { q: "Does the angle sunlight hits a surface affect how warm that surface gets (modeling seasons)?", iv: "angle of light", ivUnit:"degrees", dv: "surface temperature", dvUnit:"°F", groups: ["Direct (90°)","Angled (45°)","Low angle (15°)"], category:"PHYS: Physics & Astronomy" }
+        ]
+      },
+      {
+        name: "Air & Atmosphere",
+        ideas: [
+          { q: "Does air temperature affect air pressure inside a sealed container?", iv: "air temperature", ivUnit:"°F", dv: "pressure reading or balloon size", dvUnit:"cm or PSI", groups: ["Cold","Room temp","Warm"], category:"EAEV: Earth & Environmental Sciences" }
+        ]
+      }
+    ]
+  },
+  life: {
+    label: "Life Science",
+    emoji: "🌱",
+    topics: [
+      {
+        name: "Plant Growth",
+        ideas: [
+          { q: "Does the amount of light a plant receives affect how tall it grows?", iv: "hours of light per day", ivUnit:"hours", dv: "plant height", dvUnit:"cm", groups: ["Low light","Medium light","Full light"], category:"Biology (PLNT: Plant Sciences)" },
+          { q: "Does the type of liquid used to water a plant affect its growth?", iv: "liquid type", ivUnit:"type", dv: "plant height or leaf count", dvUnit:"cm / count", groups: ["Plain water","Sugar water","Salt water","Diluted juice"], category:"Biology (PLNT: Plant Sciences)" },
+          { q: "Does seed germination speed change with different soil temperatures?", iv: "soil temperature", ivUnit:"°F", dv: "days until sprout", dvUnit:"days", groups: ["Cool","Room temp","Warm"], category:"Biology (PLNT: Plant Sciences)" }
+        ]
+      },
+      {
+        name: "Fermentation & Decomposition (allowed, no culturing)",
+        ideas: [
+          { q: "Does the amount of sugar affect how much a yeast-fermentation reaction inflates a balloon?", iv: "amount of sugar", ivUnit:"teaspoons", dv: "balloon circumference", dvUnit:"cm", groups: ["1 tsp","2 tsp","3 tsp"], category:"CHEM: Chemistry", note:"Baker's/brewer's yeast fermentation is one of the few microorganism activities allowed for Junior projects — no SRC pre-approval needed for this specific activity." },
+          { q: "Does storage temperature affect how quickly visible mold first appears on bread?", iv: "storage temperature", ivUnit:"°F", dv: "time until mold is first visible", dvUnit:"hours/days", groups: ["Refrigerator","Room temp","Warm spot"], category:"Biology (PLNT: Plant Sciences)", note:"Keep each sample sealed in a bag the whole time. The moment mold is first visible on ANY sample, record the time and throw that sample away unopened — never grow mold further, smell it, or open the bag. Growing/culturing microorganisms is otherwise not allowed for Junior projects at Collier." },
+          { q: "Does the type of fruit peel affect how quickly it visibly decomposes in a sealed compost jar?", iv: "type of peel", ivUnit:"type", dv: "visual decomposition stage", dvUnit:"1-5 scale, photographed", groups: ["Banana","Apple","Orange"], category:"EAEV: Earth & Environmental Sciences", note:"Keep the setup sealed and check with your teacher before starting — this needs to stay an observation of decomposition, not culturing of microorganisms." }
+        ]
+      },
+      {
+        name: "Insect & Invertebrate Behavior (observation only)",
+        ideas: [
+          { q: "Does the color of light affect which direction pillbugs/roly-polies move?", iv: "light color", ivUnit:"color", dv: "direction chosen", dvUnit:"count of choices", groups: ["Red light","Blue light","No color filter"], category:"Biology (ANIM: Animal Sciences)", note:"Invertebrates (insects, pillbugs, worms) are not covered by the vertebrate-animal restriction, but always use gentle, no-harm observation and return them to where you found them afterward." },
+          { q: "Does the type of food affect how quickly ants find and travel to it?", iv: "type of food", ivUnit:"type", dv: "time to first ant arrival", dvUnit:"seconds", groups: ["Sugar","Protein (peanut butter)","Fruit"], category:"Biology (ANIM: Animal Sciences)" }
+        ]
+      }
+    ]
+  },
+  physical: {
+    label: "Physical Science",
+    emoji: "⚙️",
+    topics: [
+      {
+        name: "Forces & Motion",
+        ideas: [
+          { q: "Does ramp angle affect how far a toy car travels after leaving the ramp?", iv: "ramp angle", ivUnit:"degrees", dv: "distance traveled", dvUnit:"cm", groups: ["Low angle","Medium angle","Steep angle"], category:"ENMS: Engineering Mechanics" },
+          { q: "Does the mass of a ball affect how high it bounces?", iv: "ball mass", ivUnit:"grams", dv: "bounce height", dvUnit:"cm", groups: ["Light ball","Medium ball","Heavy ball"], category:"PHYS: Physics & Astronomy" }
+        ]
+      },
+      {
+        name: "Energy & Heat",
+        ideas: [
+          { q: "Does the color of an object's surface affect how much heat it absorbs from a lamp?", iv: "surface color", ivUnit:"color", dv: "temperature increase", dvUnit:"°F", groups: ["Black","White","Red","Silver"], category:"PHYS: Physics & Astronomy" },
+          { q: "Does the type of insulating material affect how fast a cup of warm water cools?", iv: "insulation material", ivUnit:"type", dv: "water temperature over time", dvUnit:"°F", groups: ["No insulation","Foam","Cotton","Foil"], category:"ENMS: Materials Science" }
+        ]
+      },
+      {
+        name: "Electricity & Magnetism",
+        ideas: [
+          { q: "Does the number of coils in an electromagnet affect how many paperclips it can pick up?", iv: "number of coil wraps", ivUnit:"count", dv: "number of paperclips lifted", dvUnit:"count", groups: ["10 wraps","20 wraps","30 wraps"], category:"PHYS: Physics & Astronomy" },
+          { q: "Does battery voltage affect how bright a small bulb glows?", iv: "battery voltage", ivUnit:"volts", dv: "brightness (light meter/app or lumens)", dvUnit:"lux", groups: ["1.5V","3V","4.5V"], category:"MACO: Embedded Systems", note:"Keep voltage low (under 6V) and never use car/motorcycle batteries — those aren't allowed on the display table." }
+        ]
+      },
+      {
+        name: "Matter & Simple Chemistry",
+        ideas: [
+          { q: "Does water temperature affect how fast sugar or salt dissolves?", iv: "water temperature", ivUnit:"°F", dv: "time to fully dissolve", dvUnit:"seconds", groups: ["Cold","Room temp","Hot (adult-supervised)"], category:"CHEM: Chemistry", note:"Adult supervision required for hot water — no open flames or temperatures over 75°C near your display." },
+          { q: "Does the amount of baking soda affect how much a baking-soda-and-vinegar reaction inflates a balloon?", iv: "amount of baking soda", ivUnit:"teaspoons", dv: "balloon circumference", dvUnit:"cm", groups: ["1 tsp","2 tsp","3 tsp"], category:"CHEM: Chemistry" }
+        ]
+      }
+    ]
+  }
+};
+
+// Safety/eligibility gate built from the actual SY26-27 ISEF International Rules, the
+// 2026-27 SSEF of Florida Rules Supplement, and the Collier Regional Science & Engineering
+// Fair Rule Book. This is a screening tool, not a replacement for talking to your teacher —
+// Collier's Scientific Review Committee makes the final call on every project.
+const SAFETY_ITEMS = [
+  { id:"vert", text:"My project does NOT involve any vertebrate animal (dog, cat, bird, fish, reptile, etc.) — including testing something ON a pet or observing one in a way that could stress or harm it.", flag:true, flagNote:"Junior vertebrate-animal projects cannot compete at Collier Regional (CRSEF), even with a 0% harm design. Pick a different subject — plants, non-living materials, or invertebrates (insects, worms, pillbugs) are all fine." },
+  { id:"human", text:"My project does NOT involve any other person as a participant — no surveys, reaction-time tests, taste tests, or trying my invention out on someone else.", flag:true, flagNote:"Junior human-participant projects cannot compete at Collier Regional (CRSEF) — this includes testing only on yourself. Redesign around a non-human subject instead." },
+  { id:"microbe", text:"My project does NOT grow/culture bacteria, mold (beyond the immediate-disposal bread-mold exception), viruses, or any other microorganism.", flag:true, flagNote:"Culturing microorganisms at home is not allowed, and Junior PHBA (potentially hazardous biological agent) projects cannot compete at Collier Regional. Baker's yeast fermentation and bread-mold-with-immediate-disposal are the only exceptions — check with your teacher if you're not sure your idea qualifies." },
+  { id:"hazmat", text:"My project does NOT use hazardous chemicals rated 2+ for risk, controlled substances, firearms, explosives, radiation, lasers, drones, or power tools.", flag:true, flagNote:"These need Collier SRC pre-approval BEFORE October 9, 2026 — a process that can take over a month. Talk to your teacher immediately if your idea involves any of these; otherwise consider a different topic." },
+  { id:"archeo", text:"My project does NOT involve digging for or collecting fossils/artifacts.", flag:true, flagNote:"Archeology/fossil projects need Collier SRC pre-approval plus permits before you start. Talk to your teacher if this is your topic." },
+  { id:"campus", text:"If any part of my project happens on school grounds beyond a normal classroom (a pond, lake, or wooded area on campus), I've already gotten approval from my principal and the SRC — or I'm not using school grounds that way.", flag:true, flagNote:"Testing/measuring on school ponds, trees, or lakes needs prior principal + SRC approval before you start." },
+  { id:"heat", text:"Any step involving heat, sharp tools, or electricity will be done with adult supervision.", flag:false },
+  { id:"trials", text:"My procedure plans for at least 5 trials per group (30+ if I want valid statistical analysis) — this is a Collier requirement, not just good practice.", flag:false },
+  { id:"biblio", text:"I know I'll need at least 5 sources in my bibliography (APA format), including a source for my safety procedures.", flag:false },
+  { id:"notebook", text:"I'll keep a dated, ink data notebook of everything I do and observe — including mistakes — starting from day one.", flag:false }
+];
+
+/* ============================= STATE ============================= */
+
+let state = {
+  stageIndex: 0,
+  strand: null,
+  topic: null,
+  idea: null,       // {q, iv, dv, groups, custom:false} or custom-built
+  question: "",
+  iv: "",
+  dv: "",
+  dvUnit: "",
+  groups: [],
+  control: "",
+  category: null,
+  checks: {}
+};
+
+const transcript = document.getElementById('transcript');
+const controls = document.getElementById('controls');
+const spine = document.getElementById('spine');
+
+function renderSpine(){
+  spine.innerHTML = "";
+  STAGES.forEach((s,i)=>{
+    const div = document.createElement('div');
+    div.className = 'tab' + (i===state.stageIndex ? ' active' : '') + (i<state.stageIndex ? ' done' : '');
+    div.textContent = s;
+    spine.appendChild(div);
+  });
+}
+
+function botSay(html, opts={}){
+  const entry = document.createElement('div');
+  entry.className = 'entry bot';
+  entry.innerHTML = `<div class="avatar">🧪</div><div class="bubble">${html}</div>`;
+  transcript.appendChild(entry);
+  transcript.scrollTop = transcript.scrollHeight;
+  window.scrollTo({top: document.body.scrollHeight, behavior:'smooth'});
+}
+
+function studentSay(html){
+  const entry = document.createElement('div');
+  entry.className = 'entry student';
+  entry.innerHTML = `<div class="avatar">🙋</div><div class="bubble">${html}</div>`;
+  transcript.appendChild(entry);
+  transcript.scrollTop = transcript.scrollHeight;
+}
+
+function stamp(text, cls=''){
+  return `<div class="stamp ${cls}">${text}</div>`;
+}
+
+function setControls(html){
+  controls.innerHTML = html;
+}
+
+function clearControlsAfterChoice(labelText){
+  studentSay(labelText);
+  setControls("");
+}
+
+/* ============================= FLOW ============================= */
+
+function start(){
+  renderSpine();
+  botSay(`<p>Hi! I'm going to help you build a science fair project from scratch — start to finish.</p><p>First: which area sounds most interesting to you?</p>`);
+  const html = `<div class="choices">
+    ${Object.entries(STRANDS).map(([key,s])=>`<button class="choice-btn" onclick="chooseStrand('${key}')">${s.emoji} ${s.label}</button>`).join('')}
+  </div>`;
+  setControls(html);
+}
+
+function chooseStrand(key){
+  state.strand = key;
+  state.stageIndex = 1;
+  clearControlsAfterChoice(STRANDS[key].emoji + " " + STRANDS[key].label);
+  renderSpine();
+  botSay(stamp("STRAND LOGGED ✓"));
+  botSay(`<p>Nice. Within ${STRANDS[key].label}, here are some topic areas. Pick one that sounds interesting:</p>`);
+  const topics = STRANDS[key].topics;
+  const html = `<div class="choices">
+    ${topics.map((t,i)=>`<button class="choice-btn wide" onclick="chooseTopic(${i})">${t.name}</button>`).join('')}
+  </div>`;
+  setControls(html);
+}
+
+function chooseTopic(i){
+  const topic = STRANDS[state.strand].topics[i];
+  state.topic = topic;
+  state.stageIndex = 2;
+  clearControlsAfterChoice(topic.name);
+  renderSpine();
+  botSay(stamp("TOPIC LOGGED ✓"));
+  botSay(`<p>Here are a few starter project ideas in <b>${topic.name}</b>. Click one to use it as-is, or build your own.</p>`);
+  let html = topic.ideas.map((idea,i)=>`
+    <div class="idea-card" tabindex="0" onclick="chooseIdea(${i})" onkeypress="if(event.key==='Enter')chooseIdea(${i})">
+      <b>${idea.q}</b>
+      <span>IV: ${idea.iv} &nbsp;•&nbsp; DV: ${idea.dv}${idea.note ? " — ⚠️ "+idea.note : ""}</span>
+    </div>`).join('');
+  html += `<div class="choices" style="margin-top:10px;">
+    <button class="choice-btn" onclick="buildOwnIdea()">✏️ I have my own idea</button>
+  </div>`;
+  setControls(html);
+}
+
+function chooseIdea(i){
+  const chosen = state.topic.ideas[i];
+  state.idea = chosen;
+  state.question = chosen.q;
+  state.iv = chosen.iv;
+  state.dv = chosen.dv;
+  state.dvUnit = chosen.dvUnit || "";
+  state.groups = [...chosen.groups];
+  state.control = chosen.groups[0];
+  state.category = chosen.category || null;
+  state.stageIndex = 3;
+  clearControlsAfterChoice(chosen.q);
+  renderSpine();
+  botSay(stamp("IDEA LOGGED ✓"));
+  if(chosen.note){
+    botSay(`<p>⚠️ Heads up: <b>${chosen.note}</b> Keep this in mind as you plan.</p>`);
+  }
+  showQuestionConfirm();
+}
+
+function buildOwnIdea(){
+  state.idea = "custom";
+  state.stageIndex = 3;
+  clearControlsAfterChoice("✏️ I have my own idea");
+  renderSpine();
+  botSay(`<p>Great — let's build it piece by piece. Quick heads up first: as a Junior Division project, it <b>can't involve other people, any vertebrate animal (pets included), or growing/culturing microorganisms</b> — those can't compete at Collier Regional no matter how carefully they're designed. Plants, invertebrates, physical science, chemistry, and engineering are all wide open.</p>
+  <p>So — what do you want to <b>test or change</b>? (This will become your independent variable.)</p>
+  <p class="helper-note">Example: "the amount of light," "the type of liquid," "the ramp angle"</p>`);
+  setControls(`<div class="input-row">
+    <input type="text" id="ivInput" placeholder="What are you changing?" />
+    <button onclick="submitIV()">Next</button>
+  </div>`);
+  document.getElementById('ivInput').addEventListener('keypress', e=>{ if(e.key==='Enter') submitIV(); });
+}
+
+function submitIV(){
+  const val = document.getElementById('ivInput').value.trim();
+  if(!val) return;
+  state.iv = val;
+  clearControlsAfterChoice(val);
+  botSay(`<p>Got it. Now, what will you <b>measure or observe</b> to see if it changed? (This is your dependent variable.)</p>
+  <p class="helper-note">Example: "plant height in cm," "time in seconds," "number of paperclips"</p>`);
+  setControls(`<div class="input-row">
+    <input type="text" id="dvInput" placeholder="What are you measuring?" />
+    <button onclick="submitDV()">Next</button>
+  </div>`);
+  document.getElementById('dvInput').addEventListener('keypress', e=>{ if(e.key==='Enter') submitDV(); });
+}
+
+function submitDV(){
+  const val = document.getElementById('dvInput').value.trim();
+  if(!val) return;
+  state.dv = val;
+  clearControlsAfterChoice(val);
+  state.question = `How does changing ${state.iv} affect ${state.dv}?`;
+  botSay(stamp("VARIABLES ID'D ✓","moss"));
+  showQuestionConfirm();
+}
+
+function showQuestionConfirm(){
+  state.stageIndex = 3;
+  renderSpine();
+  botSay(`<p>Here's your research question:</p>
+    <p><span class="field-name">Research Question</span>"${state.question}"</p>
+    <p>Does that sound right, or want to tweak the wording?</p>`);
+  setControls(`<div class="choices">
+    <button class="choice-btn" onclick="acceptQuestion()">✅ That's my question</button>
+    <button class="choice-btn" onclick="editQuestion()">✏️ Let me edit it</button>
+  </div>`);
+}
+
+function acceptQuestion(){
+  clearControlsAfterChoice("✅ That's my question");
+  confirmQuestion();
+}
+
+function editQuestion(){
+  clearControlsAfterChoice("✏️ Let me edit it");
+  setControls(`<div class="input-row">
+    <input type="text" id="qInput" value="${state.question.replace(/"/g,'&quot;')}" />
+    <button onclick="saveQuestionEdit()">Save</button>
+  </div>`);
+  document.getElementById('qInput').addEventListener('keypress', e=>{ if(e.key==='Enter') saveQuestionEdit(); });
+}
+
+function saveQuestionEdit(){
+  const val = document.getElementById('qInput').value.trim();
+  if(val) state.question = val;
+  clearControlsAfterChoice(state.question);
+  confirmQuestion();
+}
+
+function confirmQuestion(){
+  botSay(stamp("QUESTION SET ✓"));
+  goToGroups();
+}
+
+function goToGroups(){
+  state.stageIndex = 4;
+  renderSpine();
+  if(state.groups && state.groups.length){
+    botSay(`<p>Your independent variable is <b>${state.iv}</b>. Based on your idea, here are suggested experimental groups (the different amounts/types you'll test):</p>
+      <p>${state.groups.map(g=>`<span class="group-pill">${g}</span>`).join(' ')}</p>
+      <p>Want to keep these, or set your own groups?</p>`);
+    setControls(`<div class="choices">
+      <button class="choice-btn" onclick="keepGroups()">✅ Keep these groups</button>
+      <button class="choice-btn" onclick="editGroups()">✏️ Set my own groups</button>
+    </div>`);
+  } else {
+    promptGroups();
+  }
+}
+
+function keepGroups(){
+  clearControlsAfterChoice("✅ Keep these groups");
+  promptControl();
+}
+
+function editGroups(){
+  clearControlsAfterChoice("✏️ Set my own groups");
+  promptGroups();
+}
+
+function promptGroups(){
+  botSay(`<p>List the different levels/types of <b>${state.iv}</b> you'll test, separated by commas. Include at least 3 for good data — one of these will usually be your control (the "normal"/unchanged one).</p>
+  <p class="helper-note">Example: "no light, low light, full light"</p>`);
+  setControls(`<div class="input-row">
+    <input type="text" id="groupsInput" placeholder="Group 1, Group 2, Group 3..." />
+    <button onclick="submitGroups()">Next</button>
+  </div>`);
+  document.getElementById('groupsInput').addEventListener('keypress', e=>{ if(e.key==='Enter') submitGroups(); });
+}
+
+function submitGroups(){
+  const val = document.getElementById('groupsInput').value.trim();
+  if(!val) return;
+  state.groups = val.split(',').map(s=>s.trim()).filter(Boolean);
+  clearControlsAfterChoice(state.groups.join(', '));
+  promptControl();
+}
+
+function promptControl(){
+  botSay(`<p>Which one of these is your <b>control group</b> — the baseline/normal one you compare everything else to?</p>`);
+  const html = `<div class="choices">
+    ${state.groups.map(g=>`<button class="choice-btn" onclick="chooseControl('${g.replace(/'/g,"\\'")}')">${g}</button>`).join('')}
+  </div>`;
+  setControls(html);
+}
+
+function chooseControl(g){
+  state.control = g;
+  clearControlsAfterChoice(g);
+  botSay(stamp("GROUPS SET ✓","moss"));
+  goToSafety();
+}
+
+function goToSafety(){
+  state.stageIndex = 5;
+  renderSpine();
+  botSay(`<p>Last step before your summary: an eligibility check based on the actual Collier Regional / SSEF of Florida / ISEF Junior Division rules for this year. Read each one carefully — <b>if a rule doesn't apply to your project, check it. If it does apply, leave it unchecked</b> and read the note underneath.</p>
+  <p class="helper-note">This screens for the big stuff, but your teacher and the Collier SRC make the final call on every project.</p>`);
+  const html = `<div class="checklist">
+    ${SAFETY_ITEMS.map(item=>`
+      <div class="check-item ${item.flag ? 'flagged' : ''}" id="wrap-${item.id}">
+        <input type="checkbox" id="chk-${item.id}" onchange="toggleCheck('${item.id}')">
+        <label for="chk-${item.id}">${item.text}${item.flag ? `<span class="flag-note">${item.flagNote}</span>` : ''}</label>
+      </div>
+    `).join('')}
+  </div>
+  <div class="choices" style="margin-top:14px;">
+    <button class="choice-btn" id="continueBtn" onclick="goToSummary()" disabled>Continue to Summary →</button>
+    <button class="choice-btn" onclick="chooseStrand(state.strand)">↩️ A rule applies — help me pick a different topic</button>
+  </div>`;
+  setControls(html);
+}
+
+function toggleCheck(id){
+  state.checks[id] = document.getElementById('chk-'+id).checked;
+  const allChecked = SAFETY_ITEMS.every(item => state.checks[item.id]);
+  document.getElementById('continueBtn').disabled = !allChecked;
+}
+
+function goToSummary(){
+  state.stageIndex = 6;
+  renderSpine();
+  studentSay("✅ Eligibility check complete");
+  botSay(stamp("SAFETY CHECKED ✓","moss"));
+  state.stageIndex = 7;
+  renderSpine();
+
+  const categoryRow = state.category ? `<div class="summary-row"><span class="label">Likely Collier Category</span><div class="value">${state.category} <span class="helper-note">(confirm with your teacher — Collier judges by these subject-area categories)</span></div></div>` : `<div class="summary-row"><span class="label">Collier Category</span><div class="value">Since you built a custom idea, ask your teacher which of Collier's 7 categories (Biomedical/Health, Biology, Chemistry, Earth/Environmental, Engineering, Math/CS/Robotics, Physics/Astronomy) fits best.</div></div>`;
+
+  botSay(`
+    <div class="summary-card">
+      <h2 class="stamp-font">📋 Project Summary Card</h2>
+      <div class="summary-row"><span class="label">Strand</span><div class="value">${STRANDS[state.strand].emoji} ${STRANDS[state.strand].label}${state.topic ? ' — '+state.topic.name : ''}</div></div>
+      ${categoryRow}
+      <div class="summary-row"><span class="label">Research Question</span><div class="value">${state.question}</div></div>
+      <div class="summary-row"><span class="label">Independent Variable</span><div class="value">${state.iv}</div></div>
+      <div class="summary-row"><span class="label">Dependent Variable</span><div class="value">${state.dv}${state.dvUnit ? " ("+state.dvUnit+")" : ""}</div></div>
+      <div class="summary-row"><span class="label">Experimental Groups</span><div class="value">${state.groups.map(g=>`<span class="group-pill">${g}</span>`).join(' ')}</div></div>
+      <div class="summary-row"><span class="label">Control Group</span><div class="value">${state.control}</div></div>
+      <div class="summary-row"><span class="label">Don't forget</span><div class="value">
+        • Run at least <b>5 trials per group</b> (30+ for real statistics)<br>
+        • Keep a <b>dated, ink data notebook</b> from day one — never erase, just cross out<br>
+        • Bibliography needs <b>5+ APA sources</b>, including one for your safety procedures<br>
+        • Required forms (Adult Sponsor Checklist, Student Checklist, Research Plan, Approval Form, Risk Assessment) are due to your Collier SRC <b>no later than Oct 9, 2026</b> if your project needs pre-approval<br>
+        • On display day: no glass, no liquids/chemicals, no food, no sharp items, no brand names visible (cover them / call it "Brand X")
+      </div></div>
+      <div class="actions">
+        <button class="primary" onclick="window.print()">🖨️ Print this card</button>
+        <button onclick="downloadCard()">⬇️ Download as text</button>
+        <button onclick="location.reload()">🔁 Start a new project</button>
+      </div>
+    </div>
+  `);
+  setControls("");
+}
+
+function downloadCard(){
+  const text = `SCIENCE FAIR PROJECT SUMMARY
+=============================
+Strand: ${STRANDS[state.strand].label}${state.topic ? ' - '+state.topic.name : ''}
+Likely Collier Category: ${state.category || '(custom idea - confirm with teacher)'}
+
+Research Question:
+${state.question}
+
+Independent Variable: ${state.iv}
+Dependent Variable: ${state.dv}${state.dvUnit ? " ("+state.dvUnit+")" : ""}
+
+Experimental Groups: ${state.groups.join(', ')}
+Control Group: ${state.control}
+
+Don't forget:
+- At least 5 trials per group (30+ for real statistics)
+- Dated, ink data notebook from day one
+- Bibliography needs 5+ APA sources, including a safety-procedure source
+- Forms due to Collier SRC no later than Oct 9, 2026 if pre-approval is needed
+- Display day: no glass, liquids, chemicals, food, sharp items, or visible brand names
+
+Reminder: This tool screens for the big Collier/SSEF/ISEF Junior Division rules, but your teacher and the Collier SRC make the final call on every project.
+`;
+  const blob = new Blob([text], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'science-fair-project-summary.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+start();
+</script>
+</body>
+</html>
